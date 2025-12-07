@@ -203,6 +203,9 @@
             </div>
             <button onclick="resetAll()">Clear All</button>
             <button onclick="loadSamplePattern()">Load Sample Pattern</button>
+            <button onclick="exportPattern()">Export Pattern</button>
+            <button onclick="document.getElementById('importFile').click()">Import Pattern</button>
+            <input type="file" id="importFile" accept=".json" style="display: none;" onchange="importPattern(event)">
         </div>
 
         <div class="loom-grid">
@@ -426,6 +429,74 @@
             }
 
             updateGrids();
+        }
+
+        function exportPattern() {
+            const exportData = {
+                version: "1.0",
+                settings: {
+                    shafts: state.shafts,
+                    warpThreads: state.warpThreads,
+                    treadles: state.treadles,
+                    picks: state.picks
+                },
+                threading: state.threading,
+                tieup: state.tieup,
+                treadling: state.treadling
+            };
+
+            const dataStr = JSON.stringify(exportData, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `loom-pattern-${new Date().toISOString().slice(0, 10)}.json`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }
+
+        function importPattern(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const importData = JSON.parse(e.target.result);
+
+                    // Update settings
+                    document.getElementById('shafts').value = importData.settings.shafts;
+                    document.getElementById('warpThreads').value = importData.settings.warpThreads;
+                    document.getElementById('treadles').value = importData.settings.treadles;
+                    document.getElementById('picks').value = importData.settings.picks;
+
+                    // Initialize with new settings
+                    initializeState();
+
+                    // Load pattern data
+                    state.threading = importData.threading;
+                    state.tieup = importData.tieup;
+                    state.treadling = importData.treadling;
+
+                    // Recreate grids and update display
+                    createGrid('threading', state.shafts, state.warpThreads, toggleThreading);
+                    createGrid('tieup', state.shafts, state.treadles, toggleTieup);
+                    createGrid('treadling', state.picks, state.treadles, toggleTreadling);
+                    createGrid('drawdown', state.picks, state.warpThreads, () => {});
+                    updateGrids();
+
+                    alert('Pattern imported successfully!');
+                } catch (error) {
+                    alert('Error importing pattern: ' + error.message);
+                }
+            };
+            reader.readAsText(file);
+
+            // Reset file input so the same file can be imported again
+            event.target.value = '';
         }
 
         document.getElementById('shafts').addEventListener('change', initialize);
