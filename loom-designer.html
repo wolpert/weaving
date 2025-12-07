@@ -235,6 +235,46 @@
                 <label for="picks">Picks (Weft rows):</label>
                 <input type="number" id="picks" min="4" max="64" value="32">
             </div>
+            <div class="control-group">
+                <label for="threadingPattern">Threading Pattern:</label>
+                <select id="threadingPattern" onchange="applyThreadingPattern()">
+                    <option value="">-- Select --</option>
+                    <option value="straight">Straight Draw</option>
+                    <option value="point">Point Twill</option>
+                    <option value="reverse">Reverse</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label for="treadlingPattern">Treadling Pattern:</label>
+                <select id="treadlingPattern" onchange="applyTreadlingPattern()">
+                    <option value="">-- Select --</option>
+                    <option value="straight">Straight</option>
+                    <option value="reverse">Reverse</option>
+                    <option value="point">Point</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label for="warpColorPattern">Warp Colors:</label>
+                <select id="warpColorPattern" onchange="applyWarpColorPattern()">
+                    <option value="">-- Select --</option>
+                    <option value="solid">Solid Color</option>
+                    <option value="alternating">Alternating (2 colors)</option>
+                    <option value="rainbow">Rainbow</option>
+                </select>
+                <input type="color" id="warpColor1" value="#2196F3" title="Color 1">
+                <input type="color" id="warpColor2" value="#FF9800" title="Color 2">
+            </div>
+            <div class="control-group">
+                <label for="weftColorPattern">Weft Colors:</label>
+                <select id="weftColorPattern" onchange="applyWeftColorPattern()">
+                    <option value="">-- Select --</option>
+                    <option value="solid">Solid Color</option>
+                    <option value="alternating">Alternating (2 colors)</option>
+                    <option value="rainbow">Rainbow</option>
+                </select>
+                <input type="color" id="weftColor1" value="#FF9800" title="Color 1">
+                <input type="color" id="weftColor2" value="#2196F3" title="Color 2">
+            </div>
             <button onclick="resetAll()">Clear All</button>
             <button onclick="loadSamplePattern()">Load Sample Pattern</button>
             <button onclick="exportPattern()">Export Pattern</button>
@@ -271,10 +311,13 @@
         <div class="info">
             <h3>How to Use:</h3>
             <ul>
-                <li><strong>Threading:</strong> Click cells to assign each warp thread to a shaft (vertical columns = threads, horizontal rows = shafts)</li>
+                <li><strong>Threading Pattern:</strong> Use the dropdown to apply common threading patterns (Straight Draw, Point Twill, Reverse)</li>
+                <li><strong>Treadling Pattern:</strong> Use the dropdown to apply common treadling patterns (Straight, Reverse, Point)</li>
+                <li><strong>Warp/Weft Color Patterns:</strong> Select a color pattern and choose colors, then apply (Solid, Alternating, Rainbow)</li>
+                <li><strong>Threading:</strong> Click cells to manually assign each warp thread to a shaft (vertical columns = threads, horizontal rows = shafts)</li>
                 <li><strong>Tie-Up:</strong> Click to connect treadles to shafts (columns = treadles, rows = shafts)</li>
-                <li><strong>Treadling:</strong> Click to set the sequence of treadle presses (columns = treadles, rows = picks/rows of weaving)</li>
-                <li><strong>Thread Colors:</strong> Click the colored squares above the threading (warp) or beside the treadling (weft) to change colors</li>
+                <li><strong>Treadling:</strong> Click to manually set the sequence of treadle presses (columns = treadles, rows = picks/rows of weaving)</li>
+                <li><strong>Thread Colors:</strong> Click individual colored squares above the threading (warp) or beside the treadling (weft) to customize colors</li>
                 <li><strong>Drawdown:</strong> The resulting weave pattern is automatically calculated using your thread colors</li>
             </ul>
         </div>
@@ -408,6 +451,154 @@
                 state.treadling[pick][t] = (t === treadle);
             }
             updateGrids();
+        }
+
+        function applyThreadingPattern() {
+            const pattern = document.getElementById('threadingPattern').value;
+            if (!pattern) return;
+
+            // Clear existing threading
+            for (let i = 0; i < state.warpThreads; i++) {
+                for (let s = 0; s < state.shafts; s++) {
+                    state.threading[i][s] = false;
+                }
+            }
+
+            if (pattern === 'straight') {
+                // Straight draw: 1, 2, 3, 4, 1, 2, 3, 4...
+                for (let i = 0; i < state.warpThreads; i++) {
+                    const shaft = i % state.shafts;
+                    state.threading[i][shaft] = true;
+                }
+            } else if (pattern === 'point') {
+                // Point twill: 1, 2, 3, 4, 3, 2, 1, 2, 3, 4, 3, 2...
+                const cycleLength = (state.shafts * 2) - 2;
+                for (let i = 0; i < state.warpThreads; i++) {
+                    const pos = i % cycleLength;
+                    let shaft;
+                    if (pos < state.shafts) {
+                        shaft = pos;
+                    } else {
+                        shaft = (state.shafts * 2 - 2) - pos;
+                    }
+                    state.threading[i][shaft] = true;
+                }
+            } else if (pattern === 'reverse') {
+                // Reverse: 4, 3, 2, 1, 4, 3, 2, 1...
+                for (let i = 0; i < state.warpThreads; i++) {
+                    const shaft = (state.shafts - 1) - (i % state.shafts);
+                    state.threading[i][shaft] = true;
+                }
+            }
+
+            updateGrids();
+            // Reset dropdown
+            document.getElementById('threadingPattern').value = '';
+        }
+
+        function applyTreadlingPattern() {
+            const pattern = document.getElementById('treadlingPattern').value;
+            if (!pattern) return;
+
+            // Clear existing treadling
+            for (let i = 0; i < state.picks; i++) {
+                for (let t = 0; t < state.treadles; t++) {
+                    state.treadling[i][t] = false;
+                }
+            }
+
+            if (pattern === 'straight') {
+                // Straight: 1, 2, 3, 4, 1, 2, 3, 4...
+                for (let i = 0; i < state.picks; i++) {
+                    const treadle = i % state.treadles;
+                    state.treadling[i][treadle] = true;
+                }
+            } else if (pattern === 'reverse') {
+                // Reverse: 4, 3, 2, 1, 4, 3, 2, 1...
+                for (let i = 0; i < state.picks; i++) {
+                    const treadle = (state.treadles - 1) - (i % state.treadles);
+                    state.treadling[i][treadle] = true;
+                }
+            } else if (pattern === 'point') {
+                // Point: 1, 2, 3, 4, 3, 2, 1, 2, 3, 4, 3, 2...
+                const cycleLength = (state.treadles * 2) - 2;
+                for (let i = 0; i < state.picks; i++) {
+                    const pos = i % cycleLength;
+                    let treadle;
+                    if (pos < state.treadles) {
+                        treadle = pos;
+                    } else {
+                        treadle = (state.treadles * 2 - 2) - pos;
+                    }
+                    state.treadling[i][treadle] = true;
+                }
+            }
+
+            updateGrids();
+            // Reset dropdown
+            document.getElementById('treadlingPattern').value = '';
+        }
+
+        function applyWarpColorPattern() {
+            const pattern = document.getElementById('warpColorPattern').value;
+            if (!pattern) return;
+
+            const color1 = document.getElementById('warpColor1').value;
+            const color2 = document.getElementById('warpColor2').value;
+
+            if (pattern === 'solid') {
+                // All threads same color
+                for (let i = 0; i < state.warpThreads; i++) {
+                    state.warpColors[i] = color1;
+                }
+            } else if (pattern === 'alternating') {
+                // Alternating between two colors
+                for (let i = 0; i < state.warpThreads; i++) {
+                    state.warpColors[i] = (i % 2 === 0) ? color1 : color2;
+                }
+            } else if (pattern === 'rainbow') {
+                // Rainbow gradient
+                for (let i = 0; i < state.warpThreads; i++) {
+                    const hue = (i / state.warpThreads) * 360;
+                    state.warpColors[i] = `hsl(${hue}, 70%, 50%)`;
+                }
+            }
+
+            createColorPickers();
+            updateDrawdown();
+            // Reset dropdown
+            document.getElementById('warpColorPattern').value = '';
+        }
+
+        function applyWeftColorPattern() {
+            const pattern = document.getElementById('weftColorPattern').value;
+            if (!pattern) return;
+
+            const color1 = document.getElementById('weftColor1').value;
+            const color2 = document.getElementById('weftColor2').value;
+
+            if (pattern === 'solid') {
+                // All picks same color
+                for (let i = 0; i < state.picks; i++) {
+                    state.weftColors[i] = color1;
+                }
+            } else if (pattern === 'alternating') {
+                // Alternating between two colors
+                for (let i = 0; i < state.picks; i++) {
+                    state.weftColors[i] = (i % 2 === 0) ? color1 : color2;
+                }
+            } else if (pattern === 'rainbow') {
+                // Rainbow gradient
+                for (let i = 0; i < state.picks; i++) {
+                    const hue = (i / state.picks) * 360;
+                    state.weftColors[i] = `hsl(${hue}, 70%, 50%)`;
+                }
+            }
+
+            createColorPickers();
+            updateDrawdown();
+            // Reset dropdown
+            document.getElementById('weftColorPattern').value = '';
         }
 
         function updateGrids() {
