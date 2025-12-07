@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loom Pattern Designer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .controls {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-radius: 4px;
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .control-group label {
+            font-weight: bold;
+            color: #555;
+        }
+
+        .control-group input,
+        .control-group select {
+            padding: 5px 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        button {
+            padding: 8px 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        .loom-grid {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            grid-template-rows: auto 1fr;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .grid-label {
+            font-weight: bold;
+            color: #666;
+            padding: 5px;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .threading-section {
+            grid-column: 2;
+            grid-row: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .tieup-section {
+            grid-column: 3;
+            grid-row: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            margin-left: 10px;
+        }
+
+        .drawdown-section {
+            grid-column: 2;
+            grid-row: 2;
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .treadling-section {
+            grid-column: 3;
+            grid-row: 2;
+            display: flex;
+            align-items: flex-start;
+            margin-left: 10px;
+        }
+
+        .grid {
+            display: inline-grid;
+            gap: 1px;
+            background-color: #ccc;
+            border: 2px solid #333;
+            user-select: none;
+        }
+
+        .cell {
+            width: 20px;
+            height: 20px;
+            background-color: white;
+            cursor: pointer;
+            border: 1px solid #ddd;
+        }
+
+        .cell:hover {
+            opacity: 0.7;
+        }
+
+        .cell.active {
+            background-color: #333;
+        }
+
+        .cell.warp {
+            background-color: #2196F3;
+        }
+
+        .cell.weft {
+            background-color: #FF9800;
+        }
+
+        .info {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #e3f2fd;
+            border-radius: 4px;
+            border-left: 4px solid #2196F3;
+        }
+
+        .info h3 {
+            margin-bottom: 10px;
+            color: #1976D2;
+        }
+
+        .info ul {
+            margin-left: 20px;
+            color: #555;
+        }
+
+        .info li {
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Loom Pattern Designer</h1>
+
+        <div class="controls">
+            <div class="control-group">
+                <label for="shafts">Shafts:</label>
+                <input type="number" id="shafts" min="4" max="16" value="8">
+            </div>
+            <div class="control-group">
+                <label for="warpThreads">Warp Threads:</label>
+                <input type="number" id="warpThreads" min="4" max="64" value="32">
+            </div>
+            <div class="control-group">
+                <label for="treadles">Treadles:</label>
+                <input type="number" id="treadles" min="4" max="16" value="8">
+            </div>
+            <div class="control-group">
+                <label for="picks">Picks (Weft rows):</label>
+                <input type="number" id="picks" min="4" max="64" value="32">
+            </div>
+            <button onclick="resetAll()">Clear All</button>
+            <button onclick="loadSamplePattern()">Load Sample Pattern</button>
+        </div>
+
+        <div class="loom-grid">
+            <div class="grid-label" style="grid-column: 1; grid-row: 1;">Threading →</div>
+            <div class="threading-section">
+                <div id="threading" class="grid"></div>
+            </div>
+
+            <div class="tieup-section">
+                <div class="grid-label">Tie-Up</div>
+                <div id="tieup" class="grid"></div>
+            </div>
+
+            <div class="grid-label" style="grid-column: 1; grid-row: 2;">↓ Drawdown</div>
+            <div class="drawdown-section">
+                <div id="drawdown" class="grid"></div>
+            </div>
+
+            <div class="treadling-section">
+                <div class="grid-label">Treadling</div>
+                <div id="treadling" class="grid"></div>
+            </div>
+        </div>
+
+        <div class="info">
+            <h3>How to Use:</h3>
+            <ul>
+                <li><strong>Threading:</strong> Click cells to assign each warp thread to a shaft (vertical columns = threads, horizontal rows = shafts)</li>
+                <li><strong>Tie-Up:</strong> Click to connect treadles to shafts (columns = treadles, rows = shafts)</li>
+                <li><strong>Treadling:</strong> Click to set the sequence of treadle presses (columns = treadles, rows = picks/rows of weaving)</li>
+                <li><strong>Drawdown:</strong> The resulting weave pattern is automatically calculated. Blue = warp on top, Orange = weft on top</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        let state = {
+            shafts: 8,
+            warpThreads: 32,
+            treadles: 8,
+            picks: 32,
+            threading: [],
+            tieup: [],
+            treadling: []
+        };
+
+        function initializeState() {
+            const shafts = parseInt(document.getElementById('shafts').value);
+            const warpThreads = parseInt(document.getElementById('warpThreads').value);
+            const treadles = parseInt(document.getElementById('treadles').value);
+            const picks = parseInt(document.getElementById('picks').value);
+
+            state.shafts = shafts;
+            state.warpThreads = warpThreads;
+            state.treadles = treadles;
+            state.picks = picks;
+
+            state.threading = Array(warpThreads).fill(null).map(() => Array(shafts).fill(false));
+            state.tieup = Array(treadles).fill(null).map(() => Array(shafts).fill(false));
+            state.treadling = Array(picks).fill(null).map(() => Array(treadles).fill(false));
+        }
+
+        function createGrid(containerId, rows, cols, clickHandler) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            container.style.gridTemplateColumns = `repeat(${cols}, 20px)`;
+            container.style.gridTemplateRows = `repeat(${rows}, 20px)`;
+
+            for (let row = 0; row < rows; row++) {
+                for (let col = 0; col < cols; col++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.dataset.row = row;
+                    cell.dataset.col = col;
+                    cell.onclick = () => clickHandler(row, col);
+                    container.appendChild(cell);
+                }
+            }
+        }
+
+        function toggleThreading(shaft, thread) {
+            for (let s = 0; s < state.shafts; s++) {
+                state.threading[thread][s] = (s === shaft);
+            }
+            updateGrids();
+        }
+
+        function toggleTieup(treadle, shaft) {
+            state.tieup[treadle][shaft] = !state.tieup[treadle][shaft];
+            updateGrids();
+        }
+
+        function toggleTreadling(pick, treadle) {
+            for (let t = 0; t < state.treadles; t++) {
+                state.treadling[pick][t] = (t === treadle);
+            }
+            updateGrids();
+        }
+
+        function updateGrids() {
+            updateThreadingDisplay();
+            updateTieupDisplay();
+            updateTreadlingDisplay();
+            updateDrawdown();
+        }
+
+        function updateThreadingDisplay() {
+            const container = document.getElementById('threading');
+            const cells = container.querySelectorAll('.cell');
+
+            cells.forEach(cell => {
+                const shaft = parseInt(cell.dataset.row);
+                const thread = parseInt(cell.dataset.col);
+                cell.className = 'cell';
+                if (state.threading[thread][shaft]) {
+                    cell.classList.add('active');
+                }
+            });
+        }
+
+        function updateTieupDisplay() {
+            const container = document.getElementById('tieup');
+            const cells = container.querySelectorAll('.cell');
+
+            cells.forEach(cell => {
+                const shaft = parseInt(cell.dataset.row);
+                const treadle = parseInt(cell.dataset.col);
+                cell.className = 'cell';
+                if (state.tieup[treadle][shaft]) {
+                    cell.classList.add('active');
+                }
+            });
+        }
+
+        function updateTreadlingDisplay() {
+            const container = document.getElementById('treadling');
+            const cells = container.querySelectorAll('.cell');
+
+            cells.forEach(cell => {
+                const pick = parseInt(cell.dataset.row);
+                const treadle = parseInt(cell.dataset.col);
+                cell.className = 'cell';
+                if (state.treadling[pick][treadle]) {
+                    cell.classList.add('active');
+                }
+            });
+        }
+
+        function updateDrawdown() {
+            const container = document.getElementById('drawdown');
+            const cells = container.querySelectorAll('.cell');
+
+            cells.forEach(cell => {
+                const pick = parseInt(cell.dataset.row);
+                const thread = parseInt(cell.dataset.col);
+                cell.className = 'cell';
+
+                const isWarpUp = calculateDrawdownCell(pick, thread);
+                if (isWarpUp) {
+                    cell.classList.add('warp');
+                } else {
+                    cell.classList.add('weft');
+                }
+            });
+        }
+
+        function calculateDrawdownCell(pick, thread) {
+            const activeShafts = new Set();
+
+            for (let t = 0; t < state.treadles; t++) {
+                if (state.treadling[pick][t]) {
+                    for (let s = 0; s < state.shafts; s++) {
+                        if (state.tieup[t][s]) {
+                            activeShafts.add(s);
+                        }
+                    }
+                }
+            }
+
+            for (let s = 0; s < state.shafts; s++) {
+                if (state.threading[thread][s]) {
+                    return activeShafts.has(s);
+                }
+            }
+
+            return false;
+        }
+
+        function initialize() {
+            initializeState();
+            createGrid('threading', state.shafts, state.warpThreads, toggleThreading);
+            createGrid('tieup', state.shafts, state.treadles, toggleTieup);
+            createGrid('treadling', state.picks, state.treadles, toggleTreadling);
+            createGrid('drawdown', state.picks, state.warpThreads, () => {});
+            updateGrids();
+        }
+
+        function resetAll() {
+            initializeState();
+            updateGrids();
+        }
+
+        function loadSamplePattern() {
+            initializeState();
+
+            for (let i = 0; i < state.warpThreads; i++) {
+                const shaft = i % state.shafts;
+                state.threading[i][shaft] = true;
+            }
+
+            for (let t = 0; t < state.treadles; t++) {
+                const shaft1 = t % state.shafts;
+                const shaft2 = (t + 1) % state.shafts;
+                state.tieup[t][shaft1] = true;
+                state.tieup[t][shaft2] = true;
+            }
+
+            for (let p = 0; p < state.picks; p++) {
+                const treadle = p % state.treadles;
+                state.treadling[p][treadle] = true;
+            }
+
+            updateGrids();
+        }
+
+        document.getElementById('shafts').addEventListener('change', initialize);
+        document.getElementById('warpThreads').addEventListener('change', initialize);
+        document.getElementById('treadles').addEventListener('change', initialize);
+        document.getElementById('picks').addEventListener('change', initialize);
+
+        initialize();
+    </script>
+</body>
+</html>
