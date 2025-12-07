@@ -6,6 +6,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is a single-page web application for designing weaving patterns on multi-shaft looms. The entire application is contained in `loom-designer.html` - a standalone HTML file with embedded CSS and JavaScript (no build process or dependencies).
 
+**Repository**: https://github.com/wolpert/weaving
+**Live Demo**: https://wolpert.github.io/weaving/
+
 ## Architecture
 
 ### State Management
@@ -131,12 +134,17 @@ Modify the `min`/`max` attributes on number inputs in the HTML. Update defaults 
 
 ## File Structure
 
+- `index.html` - GitHub Pages landing page (redirects to loom-designer.html)
 - `loom-designer.html` - Complete application (HTML + CSS + JavaScript)
 - `README.md` - User documentation and GitHub Pages deployment instructions
 - `LICENSE` - Apache License 2.0
 - `CLAUDE.md` - This file
 
 No build tools, package managers, or external dependencies are used.
+
+## GitHub Pages
+
+The site is published via GitHub Pages from the main branch. The `index.html` file serves as the landing page and automatically redirects to `loom-designer.html`.
 
 ## License
 

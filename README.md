@@ -4,9 +4,12 @@ An interactive web-based tool for designing weaving patterns on a multi-shaft lo
 
 ## Live Demo
 
-[Launch Loom Pattern Designer](./loom-designer.html)
+**🚀 [Launch Loom Pattern Designer](https://wolpert.github.io/weaving/)**
 
-If you're viewing this on GitHub, you can access the live version at: `https://[username].github.io/[repository-name]/loom-designer.html`
+The application is hosted on GitHub Pages and can be accessed at:
+- https://wolpert.github.io/weaving/
+
+Or view the repository at: https://github.com/wolpert/weaving
 
 ## Features
 
@@ -103,18 +106,18 @@ The drawdown (center grid) automatically shows your weave pattern:
 3. Start designing!
 
 ### Option 2: GitHub Pages
-1. Fork this repository
-2. Go to Settings → Pages
-3. Set source to main branch
-4. Access at `https://[your-username].github.io/[repo-name]/loom-designer.html`
+1. Fork the repository at https://github.com/wolpert/weaving
+2. In your fork, go to Settings → Pages
+3. Set source to "main" branch
+4. Access at `https://[your-username].github.io/weaving/`
 
 ### Option 3: Local Development
 ```bash
 # Clone the repository
-git clone https://github.com/[username]/[repository-name].git
+git clone https://github.com/wolpert/weaving.git
 
 # Navigate to the directory
-cd [repository-name]
+cd weaving
 
 # Open the file
 # On macOS:
